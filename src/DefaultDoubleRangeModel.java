@@ -1,12 +1,27 @@
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Window;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.Serializable;
 import java.util.EventListener;
 
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.EventListenerList;
 
 
-public class DefaultDoubleRangeModel implements Serializable, DoubleRangeModel{
+
+public class DefaultDoubleRangeModel implements Serializable, DoubleRangeModel, ChangeListener, ActionListener,WindowListener{
 
 	/**
 	 * 
@@ -24,19 +39,39 @@ public class DefaultDoubleRangeModel implements Serializable, DoubleRangeModel{
 	protected int valRight = 75;
 
 	protected boolean isAdjusting = false;
+	
+	JTextArea text = new JTextArea(valLeft + " " + valRight);	
 	 
 	public DefaultDoubleRangeModel(){
+		this(0, 100, 25, 75, false); 
 		
 	}
 	public DefaultDoubleRangeModel( int min, int max, int left, int right, boolean adjusting){
 		if ((max>min) && (left <= right) && (min <= left) && (right <= max)){
 			setRangeProperties(left, right, min, max, adjusting);
+			
+			JPanel listPane = new JPanel();
+			listPane.setLayout(new BoxLayout(listPane, BoxLayout.PAGE_AXIS));
+			
+			JLabel sliderLabel = new JLabel("Range", JLabel.CENTER);
+	        sliderLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+	        
+	        RangeSlider slider = new RangeSlider(RangeSlider.HORIZONTAL,minimum, maximum, valLeft, valRight);
+	        slider.addChangeListener(this);
+	        slider.setBorder( BorderFactory.createEmptyBorder(0,0,10,0));	                
+	        
+	        listPane.add(sliderLabel);
+	        listPane.add(slider);
+	        listPane.add(text);
+	        listPane.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+	        
 		} else {
 			throw new IllegalArgumentException("invalid range properties");
 		}
 	
 }
 	
+
 	public int getMinimum() {
 		return minimum;
 	}
@@ -150,5 +185,56 @@ public class DefaultDoubleRangeModel implements Serializable, DoubleRangeModel{
     
     public <T extends EventListener> T[] getListeners(Class<T> listenerType) {
     	return listenerList.getListeners(listenerType);
+    }
+    
+    void addWindowListener(Window w) {
+        w.addWindowListener(this);
+    }
+    
+	public void stateChanged(ChangeEvent e) {
+		RangeSlider source = (RangeSlider)e.getSource();
+		if (!source.getValueIsAdjusting()) {
+			text.setText(valLeft+ " " + valRight);
+		}
+		
+	}
+
+	public void windowOpened(WindowEvent e) {  }
+	public void windowClosing(WindowEvent e) {	}
+	public void windowClosed(WindowEvent e) {  }
+	public void windowIconified(WindowEvent e) {  }
+	public void windowDeiconified(WindowEvent e) {	}
+	public void windowActivated(WindowEvent e) {  }
+	public void windowDeactivated(WindowEvent e) {	}
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+    private static void createAndShowGUI() {
+        //Create and set up the window.
+        JFrame frame = new JFrame("SliderDemo");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        DefaultDoubleRangeModel testRange = new DefaultDoubleRangeModel();
+                
+        //Add content to the window.
+        frame.add(testRange);
+        //.add(testRange, BorderLayout.CENTER);
+
+        //Display the window.
+        frame.pack();
+        frame.setVisible(true);
+    }
+    
+    public static void main(String[] args) {
+        /* Turn off metal's use of bold fonts */
+        UIManager.put("swing.boldMetal", Boolean.FALSE);
+
+        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                createAndShowGUI();
+            }
+        });
     }
 }

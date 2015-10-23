@@ -1,6 +1,7 @@
 import java.io.Serializable;
 
 import javax.accessibility.Accessible;
+import javax.accessibility.AccessibleContext;
 import javax.swing.JComponent;
 import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
@@ -17,6 +18,8 @@ public class RangeSlider extends JComponent implements SwingConstants, Accessibl
 	protected DoubleRangeModel sliderModel;
 	protected ChangeListener changeListener = createChangeListener();
 	protected transient ChangeEvent changeEvent = null;
+
+	protected int orientation;
 	
     private class ModelListener implements ChangeListener, Serializable {
         public void stateChanged(ChangeEvent e) {
@@ -56,5 +59,38 @@ public class RangeSlider extends JComponent implements SwingConstants, Accessibl
      public DoubleRangeModel getModel() {
     	 return sliderModel;
      }
+     
+     public void  setModel(DoubleRangeModel newModel) {
+    	 DoubleRangeModel oldModel = getModel();
+    	 if (oldModel != null) {
+    		 oldModel.removeChangeListener(changeListener);
+    	 }
+    	 sliderModel = newModel;
+    	 if (newModel != null) {
+    		 newModel.addChangeListener(changeListener);
+    		 if (accessibleContext != null) {
+    			 accessibleContext.firePropertyChange(AccessibleContext.ACCESSIBLE_VALUE_PROPERTY,
+    					 (oldModel == null ? null : new DefaultDoubleRangeModel(oldModel.getMinimum(), oldModel.getMaximum(),
+    							 oldModel.getValueLeft(), oldModel.getValueRight(), oldModel.getValueIsAdjusting())),
+    					 (newModel == null ? null : new DefaultDoubleRangeModel(newModel.getMinimum(), newModel.getMaximum(),
+    							 newModel.getValueLeft(), newModel.getValueRight(), newModel.getValueIsAdjusting()))
+    							 );
+    		 }
+    	 }
+    	 firePropertyChange("model", oldModel, sliderModel);
+     }
+     
+     public RangeSlider(int orientation, int min, int max, int left, int right){
+         this.orientation = orientation;
+         sliderModel = new DefaultDoubleRangeModel(min, max, left, right, false);
+         sliderModel.addChangeListener(changeListener);
+         updateUI();
+     }
+     
+     public boolean getValueIsAdjusting() {
+         return getModel().getValueIsAdjusting();
+     }
+     
+     
      
 }
